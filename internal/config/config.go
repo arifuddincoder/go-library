@@ -13,7 +13,7 @@ type Config struct {
 	JwtSecret string
 }
 
-func loadEnv() *Config {
+func LoadEnv() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No .env file found, using system env")
