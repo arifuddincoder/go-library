@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"go-library/internal/config"
+	"go-library/internal/domain/user"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -23,6 +24,7 @@ func (cv *CustomValidator) Validate(i any) error {
 }
 
 func Start(db *gorm.DB, cfg *config.Config) {
+	db.AutoMigrate(&user.User{})
 	e := echo.New()
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.Use(middleware.RequestLogger())
@@ -30,6 +32,8 @@ func Start(db *gorm.DB, cfg *config.Config) {
 	e.GET("/", func(c *echo.Context) error {
 		return c.String(http.StatusOK, "Hello from go library")
 	})
+
+	user.RegisterRoutes(e, db, cfg)
 
 	port := fmt.Sprintf(":%s", cfg.Port)
 	if err := e.Start(port); err != nil {
