@@ -77,6 +77,60 @@ func (s *service) GetAllBooks() ([]dto.Response, error) {
 	return responses, nil
 }
 
+func (s *service) UpdateBook(id uint, req dto.UpdateRequest) (*dto.Response, error) {
+	existing, err := s.repo.GetBookByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil {
+		return nil, ErrBookNotFound
+	}
+
+	if req.Title != nil {
+		existing.Title = *req.Title
+	}
+	if req.Author != nil {
+		existing.Author = *req.Author
+	}
+	if req.Publisher != nil {
+		existing.Publisher = *req.Publisher
+	}
+	if req.PublishedYear != nil {
+		existing.PublishedYear = *req.PublishedYear
+	}
+	if req.CategoryID != nil {
+		existing.CategoryID = *req.CategoryID
+	}
+	if req.Description != nil {
+		existing.Description = *req.Description
+	}
+	if req.TotalCopies != nil {
+		existing.TotalCopies = *req.TotalCopies
+	}
+
+	if err := s.repo.UpdateBook(existing); err != nil {
+		return nil, err
+	}
+
+	response := dto.Response{
+		ID:              existing.ID,
+		Title:           existing.Title,
+		Author:          existing.Author,
+		ISBN:            existing.ISBN,
+		Publisher:       existing.Publisher,
+		PublishedYear:   existing.PublishedYear,
+		Description:     existing.Description,
+		TotalCopies:     existing.TotalCopies,
+		AvailableCopies: existing.AvailableCopies,
+		Category: dto.CategoryInfo{
+			ID:   existing.CategoryID,
+			Name: existing.Category.Name,
+		},
+		CreatedAt: existing.CreatedAt.String(),
+	}
+	return &response, nil
+}
+
 func (s *service) DeleteBook(id uint) error {
 	book, err := s.repo.GetBookByID(id)
 	if err != nil {

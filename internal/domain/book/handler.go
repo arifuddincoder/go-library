@@ -5,7 +5,6 @@ import (
 	"go-library/internal/domain/book/dto"
 	"go-library/internal/httpresponse"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v5"
 )
@@ -57,7 +56,7 @@ func (h *handler) CreateBook(c *echo.Context) error {
 }
 
 func (h *handler) GetBookByID(c *echo.Context) error {
-	id, err := strconv.ParseUint(c.PathParam("id"), 10, 64)
+	id, err := echo.PathParam[uint](c, "id")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, httpresponse.Error{
 			Code:    http.StatusBadRequest,
@@ -98,8 +97,46 @@ func (h *handler) GetAllBooks(c *echo.Context) error {
 	return c.JSON(http.StatusOK, responses)
 }
 
+func (h *handler) UpdateBook(c *echo.Context) error {
+	id, err := echo.PathParam[uint](c, "id")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, httpresponse.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid book id",
+			Details: err.Error(),
+		})
+	}
+
+	var req dto.UpdateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, httpresponse.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid request payload",
+			Details: err.Error(),
+		})
+	}
+
+	response, err := h.service.UpdateBook(id, req)
+	if err != nil {
+		if errors.Is(err, ErrBookNotFound) {
+			return c.JSON(http.StatusNotFound, httpresponse.Error{
+				Code:    http.StatusNotFound,
+				Message: "Book not found",
+				Details: err.Error(),
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to update book",
+			Details: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
 func (h *handler) DeleteBook(c *echo.Context) error {
-	id, err := strconv.ParseUint(c.PathParam("id"), 10, 64)
+	id, err := echo.PathParam[uint](c, "id")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, httpresponse.Error{
 			Code:    http.StatusBadRequest,
@@ -123,5 +160,7 @@ func (h *handler) DeleteBook(c *echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusNoContent, nil)
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "Book deleted successfully",
+	})
 }

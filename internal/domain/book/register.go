@@ -25,6 +25,10 @@ func RegisterRoutes(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
 		middlewares.AuthMiddleware(jwtService),
 		middlewares.RequireRole(string(constants.RoleAdmin), string(constants.RoleSuperAdmin)),
 	)
+	api.PATCH("/:id", bookHandler.UpdateBook,
+		middlewares.AuthMiddleware(jwtService),
+		middlewares.RequireRole(string(constants.RoleAdmin), string(constants.RoleSuperAdmin)),
+	)
 	api.DELETE("/:id", bookHandler.DeleteBook,
 		middlewares.AuthMiddleware(jwtService),
 		middlewares.RequireRole(string(constants.RoleAdmin), string(constants.RoleSuperAdmin)),

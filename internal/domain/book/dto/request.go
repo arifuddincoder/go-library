@@ -10,3 +10,13 @@ type RegisterRequest struct {
 	Description   string `json:"description"`
 	TotalCopies   int    `json:"total_copies" validate:"required,min=1"`
 }
+
+type UpdateRequest struct {
+	Title         *string `json:"title"`
+	Author        *string `json:"author"`
+	Publisher     *string `json:"publisher"`
+	PublishedYear *int    `json:"published_year"`
+	CategoryID    *uint   `json:"category_id"`
+	Description   *string `json:"description"`
+	TotalCopies   *int    `json:"total_copies"`
+}
