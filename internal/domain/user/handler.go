@@ -114,10 +114,12 @@ func (h *handler) GetMe(c *echo.Context) error {
 
 	email, _ := c.Get("user_email").(string)
 	name, _ := c.Get("user_name").(string)
+	role, _ := c.Get("user_role").(string)
 
 	return c.JSON(http.StatusOK, dto.Response{
 		ID:    userID,
 		Name:  name,
 		Email: email,
+		Role:  role,
 	})
 }

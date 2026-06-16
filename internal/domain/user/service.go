@@ -30,6 +30,7 @@ func (s *service) RegisterUser(req dto.RegisterRequest) (*dto.Response, error) {
 	user := User{
 		Name:  req.Name,
 		Email: req.Email,
+		Role:  RoleUser,
 	}
 
 	if err := user.hashPassword(req.Password); err != nil {
@@ -44,6 +45,7 @@ func (s *service) RegisterUser(req dto.RegisterRequest) (*dto.Response, error) {
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
+		Role:      string(user.Role),
 		CreatedAt: user.CreatedAt.String(),
 	}
 	return &response, nil
@@ -67,7 +69,7 @@ func (s *service) LoginUser(req dto.LoginRequest) (*dto.Response, error) {
 	}
 
 	// generate token
-	token, err := s.jwtService.GenerateToken(user.ID, user.Email, user.Name)
+	token, err := s.jwtService.GenerateToken(user.ID, user.Email, user.Name, string(user.Role))
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -76,6 +78,7 @@ func (s *service) LoginUser(req dto.LoginRequest) (*dto.Response, error) {
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
+		Role:      string(user.Role),
 		Token:     token,
 		CreatedAt: user.CreatedAt.String(),
 	}

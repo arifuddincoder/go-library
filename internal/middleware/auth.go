@@ -3,6 +3,7 @@ package middlewares
 import (
 	"go-library/internal/auth"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/labstack/echo/v5"
@@ -32,7 +33,6 @@ func AuthMiddleware(jwtService auth.JWTService) echo.MiddlewareFunc {
 			tokenString := parts[1]
 
 			// validate token
-
 			claims, err := jwtService.ValidateToken(tokenString)
 			if err != nil {
 				return c.JSON(http.StatusUnauthorized, map[string]string{
@@ -44,8 +44,30 @@ func AuthMiddleware(jwtService auth.JWTService) echo.MiddlewareFunc {
 			c.Set("user_id", claims.UserID)
 			c.Set("user_email", claims.Email)
 			c.Set("user_name", claims.Name)
+			c.Set("user_role", claims.Role)
 
 			return next(c)
+		}
+	}
+}
+
+func RequireRole(roles ...string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			userRole, ok := c.Get("user_role").(string)
+			if !ok {
+				return c.JSON(http.StatusForbidden, map[string]string{
+					"error": "missing role in context",
+				})
+			}
+
+			if slices.Contains(roles, userRole) {
+				return next(c)
+			}
+
+			return c.JSON(http.StatusForbidden, map[string]string{
+				"error": "you do not have permission to access this resource",
+			})
 		}
 	}
 }
