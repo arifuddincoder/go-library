@@ -85,3 +85,37 @@ func (s *service) LoginUser(req dto.LoginRequest) (*dto.Response, error) {
 
 	return &response, nil
 }
+
+func (s *service) CreateAdmin(req dto.RegisterRequest) (*dto.Response, error) {
+	existing, err := s.repo.GetUserByEmail(req.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	if existing != nil {
+		return nil, ErrorAlreadyExist
+	}
+
+	user := User{
+		Name:  req.Name,
+		Email: req.Email,
+		Role:  RoleAdmin,
+	}
+
+	if err := user.hashPassword(req.Password); err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.RegisterUser(&user); err != nil {
+		return nil, err
+	}
+
+	response := dto.Response{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		Role:      string(user.Role),
+		CreatedAt: user.CreatedAt.String(),
+	}
+	return &response, nil
+}

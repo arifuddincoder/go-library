@@ -123,3 +123,42 @@ func (h *handler) GetMe(c *echo.Context) error {
 		Role:  role,
 	})
 }
+
+func (h *handler) CreateAdmin(c *echo.Context) error {
+	var req dto.RegisterRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, httpresponse.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid request payload",
+			Details: err.Error(),
+		})
+	}
+
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, httpresponse.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Validation failed",
+			Details: err.Error(),
+		})
+	}
+
+	response, err := h.service.CreateAdmin(req)
+	if err != nil {
+		if errors.Is(err, ErrorAlreadyExist) {
+			return c.JSON(http.StatusConflict, httpresponse.Error{
+				Code:    http.StatusConflict,
+				Message: "Failed to create admin",
+				Details: err.Error(),
+			})
+		}
+
+		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to create admin",
+			Details: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusCreated, response)
+}

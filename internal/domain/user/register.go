@@ -19,4 +19,8 @@ func RegisterRoutes(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
 	api.POST("/register", userHandler.RegisterUser)
 	api.POST("/login", userHandler.LoginUser)
 	api.GET("/me", userHandler.GetMe, middlewares.AuthMiddleware(jwtService))
+	api.POST("/admin", userHandler.CreateAdmin,
+		middlewares.AuthMiddleware(jwtService),
+		middlewares.RequireRole(string(RoleSuperAdmin)),
+	)
 }
