@@ -119,3 +119,7 @@ func (s *service) CreateAdmin(req dto.RegisterRequest) (*dto.Response, error) {
 	}
 	return &response, nil
 }
+
+func (s *service) DeleteUser(id uint) error {
+	return s.repo.DeleteUser(id)
+}

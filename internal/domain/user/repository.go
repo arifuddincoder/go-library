@@ -9,6 +9,7 @@ import (
 type Repository interface {
 	RegisterUser(user *User) error
 	GetUserByEmail(email string) (*User, error)
+	DeleteUser(id uint) error
 }
 
 type repository struct {
@@ -44,4 +45,17 @@ func (r repository) GetUserByEmail(email string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func (r *repository) DeleteUser(id uint) error {
+	result := r.db.Delete(&User{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return ErrUserNotFound
+	}
+
+	return nil
 }

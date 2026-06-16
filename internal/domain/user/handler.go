@@ -162,3 +162,34 @@ func (h *handler) CreateAdmin(c *echo.Context) error {
 
 	return c.JSON(http.StatusCreated, response)
 }
+
+func (h *handler) DeleteUser(c *echo.Context) error {
+	id, err := echo.PathParam[uint](c, "id")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, httpresponse.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid user id",
+			Details: err.Error(),
+		})
+	}
+
+	if err := h.service.DeleteUser(id); err != nil {
+		if errors.Is(err, ErrUserNotFound) {
+			return c.JSON(http.StatusNotFound, httpresponse.Error{
+				Code:    http.StatusNotFound,
+				Message: "User not found",
+				Details: err.Error(),
+			})
+		}
+
+		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to delete user",
+			Details: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "User deleted successfully",
+	})
+}
