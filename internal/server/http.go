@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"go-library/internal/config"
+	"go-library/internal/domain/book"
 	"go-library/internal/domain/category"
 	"go-library/internal/domain/user"
 	"net/http"
@@ -25,7 +26,7 @@ func (cv *CustomValidator) Validate(i any) error {
 }
 
 func Start(db *gorm.DB, cfg *config.Config) {
-	db.AutoMigrate(&user.User{}, &category.Category{})
+	db.AutoMigrate(&user.User{}, &category.Category{}, &book.Book{})
 	e := echo.New()
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.Use(middleware.RequestLogger())
@@ -36,6 +37,7 @@ func Start(db *gorm.DB, cfg *config.Config) {
 
 	user.RegisterRoutes(e, db, cfg)
 	category.RegisterRoutes(e, db, cfg)
+	book.RegisterRoutes(e, db, cfg)
 
 	port := fmt.Sprintf(":%s", cfg.Port)
 	if err := e.Start(port); err != nil {
