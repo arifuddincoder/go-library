@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	"go-library/internal/auth"
+	"go-library/internal/constants"
 	"go-library/internal/domain/user/dto"
 )
 
@@ -30,7 +31,7 @@ func (s *service) RegisterUser(req dto.RegisterRequest) (*dto.Response, error) {
 	user := User{
 		Name:  req.Name,
 		Email: req.Email,
-		Role:  RoleUser,
+		Role:  constants.RoleUser,
 	}
 
 	if err := user.hashPassword(req.Password); err != nil {
@@ -99,7 +100,7 @@ func (s *service) CreateAdmin(req dto.RegisterRequest) (*dto.Response, error) {
 	user := User{
 		Name:  req.Name,
 		Email: req.Email,
-		Role:  RoleAdmin,
+		Role:  constants.RoleAdmin,
 	}
 
 	if err := user.hashPassword(req.Password); err != nil {

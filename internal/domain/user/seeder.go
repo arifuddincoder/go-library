@@ -2,6 +2,7 @@ package user
 
 import (
 	"go-library/internal/config"
+	"go-library/internal/constants"
 	"log"
 )
 
@@ -30,7 +31,7 @@ func SeedAdmin(repo Repository, cfg *config.Config) {
 	admin := User{
 		Name:  name,
 		Email: cfg.AdminEmail,
-		Role:  RoleSuperAdmin,
+		Role:  constants.RoleSuperAdmin,
 	}
 
 	if err := admin.hashPassword(cfg.AdminPassword); err != nil {
