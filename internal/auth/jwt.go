@@ -1,16 +1,16 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-const (
-	jwtSecretKey         = "your_secret"
-	defaultTokenDuration = 24 * time.Hour // 7 days
-)
+const defaultTokenDuration = 24 * time.Hour
+
+var ErrEmptySecretKey = errors.New("jwt secret key must not be empty")
 
 type JWTClaims struct {
 	UserID uint   `json:"user_id"`
@@ -30,20 +30,18 @@ type jwtService struct {
 	tokenDuration time.Duration
 }
 
-func NewJWTService(secretKey string) JWTService {
-
+func NewJWTService(secretKey string) (JWTService, error) {
 	if secretKey == "" {
-		secretKey = jwtSecretKey
+		return nil, ErrEmptySecretKey
 	}
 
 	return &jwtService{
 		secretKey:     secretKey,
 		tokenDuration: defaultTokenDuration,
-	}
+	}, nil
 }
-func (js *jwtService) GenerateToken(userId uint, email string, name string, role string) (string, error) {
 
-	// create claims
+func (js *jwtService) GenerateToken(userId uint, email string, name string, role string) (string, error) {
 	claims := JWTClaims{
 		UserID: userId,
 		Name:   name,
@@ -56,9 +54,9 @@ func (js *jwtService) GenerateToken(userId uint, email string, name string, role
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) // create token with claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString([]byte(js.secretKey)) // sign token with secret key
+	tokenString, err := token.SignedString([]byte(js.secretKey))
 	if err != nil {
 		return "", err
 	}
@@ -67,17 +65,14 @@ func (js *jwtService) GenerateToken(userId uint, email string, name string, role
 
 func (js *jwtService) ValidateToken(tokenStr string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &JWTClaims{}, func(token *jwt.Token) (any, error) {
-
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-
 		return []byte(js.secretKey), nil
-
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("unexpected signing method: %w", err)
+		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
