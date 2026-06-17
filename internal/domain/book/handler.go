@@ -128,6 +128,13 @@ func (h *handler) UpdateBook(c *echo.Context) error {
 				Details: err.Error(),
 			})
 		}
+		if errors.Is(err, ErrInvalidTotalCopies) {
+			return c.JSON(http.StatusConflict, httpresponse.Error{
+				Code:    http.StatusConflict,
+				Message: "Cannot update book",
+				Details: err.Error(),
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
 			Code:    http.StatusInternalServerError,
 			Message: "Failed to update book",

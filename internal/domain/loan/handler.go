@@ -51,11 +51,20 @@ func (h *handler) RequestLoan(c *echo.Context) error {
 
 	response, err := h.service.RequestLoan(userID, req)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
-			Code:    http.StatusInternalServerError,
-			Message: "Failed to create loan request",
-			Details: err.Error(),
-		})
+		switch {
+		case errors.Is(err, ErrBookNotFound):
+			return c.JSON(http.StatusNotFound, httpresponse.Error{
+				Code: http.StatusNotFound, Message: "Cannot create loan", Details: err.Error(),
+			})
+		case errors.Is(err, ErrNoCopiesLeft), errors.Is(err, ErrAlreadyRequested):
+			return c.JSON(http.StatusConflict, httpresponse.Error{
+				Code: http.StatusConflict, Message: "Cannot create loan", Details: err.Error(),
+			})
+		default:
+			return c.JSON(http.StatusInternalServerError, httpresponse.Error{
+				Code: http.StatusInternalServerError, Message: "Failed to create loan request", Details: err.Error(),
+			})
+		}
 	}
 	return c.JSON(http.StatusCreated, response)
 }

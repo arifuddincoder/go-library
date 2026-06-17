@@ -111,30 +111,26 @@ func (s *service) UpdateBook(id uint, req dto.UpdateRequest) (*dto.Response, err
 		existing.Description = *req.Description
 	}
 	if req.TotalCopies != nil {
+		// koto ta borrowed ache seita thik rekhe available adjust kori
+		borrowed := existing.TotalCopies - existing.AvailableCopies
+		newAvailable := *req.TotalCopies - borrowed
+		if newAvailable < 0 {
+			return nil, ErrInvalidTotalCopies
+		}
 		existing.TotalCopies = *req.TotalCopies
+		existing.AvailableCopies = newAvailable
 	}
 
 	if err := s.repo.UpdateBook(existing); err != nil {
 		return nil, err
 	}
 
-	response := dto.Response{
-		ID:              existing.ID,
-		Title:           existing.Title,
-		Author:          existing.Author,
-		ISBN:            existing.ISBN,
-		Publisher:       existing.Publisher,
-		PublishedYear:   existing.PublishedYear,
-		Description:     existing.Description,
-		TotalCopies:     existing.TotalCopies,
-		AvailableCopies: existing.AvailableCopies,
-		Category: dto.CategoryInfo{
-			ID:   existing.CategoryID,
-			Name: existing.Category.Name,
-		},
-		CreatedAt: existing.CreatedAt.String(),
+	// category name soho fresh data fetch kori
+	updated, err := s.repo.GetBookByID(id)
+	if err != nil {
+		return nil, err
 	}
-	return &response, nil
+	return toResponse(updated), nil
 }
 
 func (s *service) DeleteBook(id uint) error {

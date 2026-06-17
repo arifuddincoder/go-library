@@ -55,7 +55,8 @@ func Search(keyword string, columns ...string) func(*gorm.DB) *gorm.DB {
 		if keyword == "" || len(columns) == 0 {
 			return db
 		}
-		q := db
+		// alada statement banai jate OR gula () er moddhe group hoy
+		q := db.Session(&gorm.Session{NewDB: true})
 		like := "%" + keyword + "%"
 		for i, col := range columns {
 			if i == 0 {

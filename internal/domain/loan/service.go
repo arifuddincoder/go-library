@@ -48,6 +48,29 @@ func toResponse(l *Loan) *dto.Response {
 
 // user request kore — pending state e toiri hoy
 func (s *service) RequestLoan(userID uint, req dto.RequestLoan) (*dto.Response, error) {
+	// book exist kore kina check
+	b, err := s.repo.GetBookByID(req.BookID)
+	if err != nil {
+		return nil, err
+	}
+	if b == nil {
+		return nil, ErrBookNotFound
+	}
+
+	// copy ache kina check
+	if b.AvailableCopies < 1 {
+		return nil, ErrNoCopiesLeft
+	}
+
+	// already pending/borrowed ache kina check
+	active, err := s.repo.HasActiveLoan(userID, req.BookID)
+	if err != nil {
+		return nil, err
+	}
+	if active {
+		return nil, ErrAlreadyRequested
+	}
+
 	loan := Loan{
 		UserID: userID,
 		BookID: req.BookID,

@@ -11,6 +11,8 @@ import (
 type Repository interface {
 	CreateLoan(loan *Loan) error
 	GetLoanByID(id uint) (*Loan, error)
+	GetBookByID(id uint) (*book.Book, error)
+	HasActiveLoan(userID, bookID uint) (bool, error)
 	ApproveLoan(loan *Loan) error
 	UpdateLoan(loan *Loan) error
 	ReturnLoan(loan *Loan) error
@@ -49,6 +51,31 @@ func (r *repository) GetLoanByID(id uint) (*Loan, error) {
 		return nil, result.Error
 	}
 	return &loan, nil
+}
+
+func (r *repository) GetBookByID(id uint) (*book.Book, error) {
+	var b book.Book
+	result := r.db.First(&b, id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+	return &b, nil
+}
+
+// same user same book er jonno pending ba borrowed loan ache kina
+func (r *repository) HasActiveLoan(userID, bookID uint) (bool, error) {
+	var count int64
+	err := r.db.Model(&Loan{}).
+		Where("user_id = ? AND book_id = ? AND status IN ?",
+			userID, bookID, []string{StatusPending, StatusBorrowed}).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // approve: boi available kina check kore, copy komay, loan save kore — sob ek transaction e
