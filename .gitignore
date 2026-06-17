@@ -4,10 +4,10 @@
 *.dll
 *.so
 *.dylib
-/gotickets
+/go-library
 /bin/
 /dist/
-
+/app
 # Go build cache
 *.o
 *.a
@@ -49,3 +49,4 @@ coverage.html
 
 # Uploaded files (if any)
 uploads/
+
