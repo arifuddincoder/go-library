@@ -2,12 +2,14 @@ package server
 
 import (
 	"fmt"
+	"go-library/internal/auth"
 	"go-library/internal/config"
 	"go-library/internal/domain/book"
 	"go-library/internal/domain/category"
 	"go-library/internal/domain/dashboard"
 	"go-library/internal/domain/loan"
 	"go-library/internal/domain/user"
+	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -32,15 +34,21 @@ func Start(db *gorm.DB, cfg *config.Config) {
 	e.Validator = &CustomValidator{validator: validator.New()}
 	e.Use(middleware.RequestLogger())
 
+	// ek bar e jwtService banai, sob domain ke pass kori
+	jwtService, err := auth.NewJWTService(cfg.JwtSecret)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	e.GET("/", func(c *echo.Context) error {
 		return c.String(http.StatusOK, "Hello from go library")
 	})
 
-	user.RegisterRoutes(e, db, cfg)
-	category.RegisterRoutes(e, db, cfg)
-	book.RegisterRoutes(e, db, cfg)
-	loan.RegisterRoutes(e, db, cfg)
-	dashboard.RegisterRoutes(e, db, cfg)
+	user.RegisterRoutes(e, db, cfg, jwtService)
+	category.RegisterRoutes(e, db, jwtService)
+	book.RegisterRoutes(e, db, jwtService)
+	loan.RegisterRoutes(e, db, jwtService)
+	dashboard.RegisterRoutes(e, db, jwtService)
 
 	port := fmt.Sprintf(":%s", cfg.Port)
 	if err := e.Start(port); err != nil {
