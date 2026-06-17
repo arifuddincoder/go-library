@@ -5,6 +5,7 @@ import (
 	"go-library/internal/config"
 	"go-library/internal/domain/book"
 	"go-library/internal/domain/category"
+	"go-library/internal/domain/loan"
 	"go-library/internal/domain/user"
 	"net/http"
 
@@ -37,6 +38,7 @@ func Start(db *gorm.DB, cfg *config.Config) {
 	user.RegisterRoutes(e, db, cfg)
 	category.RegisterRoutes(e, db, cfg)
 	book.RegisterRoutes(e, db, cfg)
+	loan.RegisterRoutes(e, db, cfg)
 
 	port := fmt.Sprintf(":%s", cfg.Port)
 	if err := e.Start(port); err != nil {
