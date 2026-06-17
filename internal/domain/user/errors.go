@@ -7,4 +7,5 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidToken       = errors.New("invalid or expired refresh token")
+	ErrCannotDeleteUser   = errors.New("you do not have permission to delete this user")
 )

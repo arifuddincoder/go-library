@@ -174,7 +174,9 @@ func (h *handler) DeleteUser(c *echo.Context) error {
 		})
 	}
 
-	if err := h.service.DeleteUser(id); err != nil {
+	actorRole, _ := c.Get("user_role").(string)
+
+	if err := h.service.DeleteUser(actorRole, id); err != nil {
 		if errors.Is(err, ErrUserNotFound) {
 			return c.JSON(http.StatusNotFound, httpresponse.Error{
 				Code:    http.StatusNotFound,
@@ -182,11 +184,17 @@ func (h *handler) DeleteUser(c *echo.Context) error {
 				Details: err.Error(),
 			})
 		}
-
+		if errors.Is(err, ErrCannotDeleteUser) {
+			return c.JSON(http.StatusForbidden, httpresponse.Error{
+				Code:    http.StatusForbidden,
+				Message: "Forbidden",
+				Details: err.Error(),
+			})
+		}
+		c.Logger().Error("failed to delete user", "error", err)
 		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
 			Code:    http.StatusInternalServerError,
-			Message: "Failed to delete user",
-			Details: err.Error(),
+			Message: "Something went wrong, please try again later",
 		})
 	}
 

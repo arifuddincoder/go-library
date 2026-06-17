@@ -128,8 +128,26 @@ func (s *service) CreateAdmin(req dto.RegisterRequest) (*dto.Response, error) {
 	return &response, nil
 }
 
-func (s *service) DeleteUser(id uint) error {
-	return s.repo.DeleteUser(id)
+func (s *service) DeleteUser(actorRole string, targetID uint) error {
+	target, err := s.repo.GetUserByID(targetID)
+	if err != nil {
+		return err
+	}
+	if target == nil {
+		return ErrUserNotFound
+	}
+
+	// super_admin কাউকে delete করা যাবে না
+	if target.Role == constants.RoleSuperAdmin {
+		return ErrCannotDeleteUser
+	}
+
+	// admin আরেকজন admin-কে delete করতে পারবে না, শুধু super_admin পারবে
+	if target.Role == constants.RoleAdmin && actorRole != string(constants.RoleSuperAdmin) {
+		return ErrCannotDeleteUser
+	}
+
+	return s.repo.DeleteUser(targetID)
 }
 
 func (s *service) GetAllUsers(p query.Params) (*httpresponse.Paginated, error) {

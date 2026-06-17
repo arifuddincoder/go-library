@@ -46,10 +46,10 @@ func (h *handler) CreateBook(c *echo.Context) error {
 				Details: err.Error(),
 			})
 		}
+		c.Logger().Error("failed to create book", "error", err)
 		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
 			Code:    http.StatusInternalServerError,
-			Message: "Failed to create book",
-			Details: err.Error(),
+			Message: "Something went wrong, please try again later",
 		})
 	}
 
