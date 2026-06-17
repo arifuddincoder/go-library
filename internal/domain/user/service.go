@@ -5,6 +5,8 @@ import (
 	"go-library/internal/auth"
 	"go-library/internal/constants"
 	"go-library/internal/domain/user/dto"
+	"go-library/internal/httpresponse"
+	"go-library/internal/query"
 )
 
 type service struct {
@@ -123,4 +125,25 @@ func (s *service) CreateAdmin(req dto.RegisterRequest) (*dto.Response, error) {
 
 func (s *service) DeleteUser(id uint) error {
 	return s.repo.DeleteUser(id)
+}
+
+func (s *service) GetAllUsers(p query.Params) (*httpresponse.Paginated, error) {
+	users, total, err := s.repo.GetAllUsers(p)
+	if err != nil {
+		return nil, err
+	}
+
+	responses := make([]dto.Response, 0, len(users))
+	for _, user := range users {
+		responses = append(responses, dto.Response{
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			Role:      string(user.Role),
+			CreatedAt: user.CreatedAt.String(),
+		})
+	}
+
+	result := httpresponse.NewPaginated(responses, p.Page, p.Limit, total)
+	return &result, nil
 }

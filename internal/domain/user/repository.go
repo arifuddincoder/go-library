@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"go-library/internal/query"
 
 	"gorm.io/gorm"
 )
@@ -9,6 +10,7 @@ import (
 type Repository interface {
 	RegisterUser(user *User) error
 	GetUserByEmail(email string) (*User, error)
+	GetAllUsers(p query.Params) ([]User, int64, error)
 	DeleteUser(id uint) error
 }
 
@@ -58,4 +60,29 @@ func (r *repository) DeleteUser(id uint) error {
 	}
 
 	return nil
+}
+
+func (r *repository) GetAllUsers(p query.Params) ([]User, int64, error) {
+	var users []User
+	var total int64
+
+	searchScope := query.Search(p.Search, "name", "email")
+	allowedSort := map[string]bool{"name": true, "email": true, "created_at": true}
+
+	r.db.Model(&User{}).
+		Scopes(searchScope).
+		Count(&total)
+
+	result := r.db.
+		Scopes(
+			searchScope,
+			query.Sort(p, allowedSort),
+			query.Paginate(p),
+		).
+		Find(&users)
+
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+	return users, total, nil
 }

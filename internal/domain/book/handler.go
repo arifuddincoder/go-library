@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go-library/internal/domain/book/dto"
 	"go-library/internal/httpresponse"
+	"go-library/internal/query"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -85,7 +86,9 @@ func (h *handler) GetBookByID(c *echo.Context) error {
 }
 
 func (h *handler) GetAllBooks(c *echo.Context) error {
-	responses, err := h.service.GetAllBooks()
+	p := query.Parse(c)
+
+	result, err := h.service.GetAllBooks(p)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
 			Code:    http.StatusInternalServerError,
@@ -94,7 +97,7 @@ func (h *handler) GetAllBooks(c *echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, responses)
+	return c.JSON(http.StatusOK, result)
 }
 
 func (h *handler) UpdateBook(c *echo.Context) error {

@@ -1,6 +1,10 @@
 package book
 
-import "go-library/internal/domain/book/dto"
+import (
+	"go-library/internal/domain/book/dto"
+	"go-library/internal/httpresponse"
+	"go-library/internal/query"
+)
 
 type service struct {
 	repo Repository
@@ -64,8 +68,8 @@ func (s *service) GetBookByID(id uint) (*dto.Response, error) {
 	return toResponse(book), nil
 }
 
-func (s *service) GetAllBooks() ([]dto.Response, error) {
-	books, err := s.repo.GetAllBooks()
+func (s *service) GetAllBooks(p query.Params) (*httpresponse.Paginated, error) {
+	books, total, err := s.repo.GetAllBooks(p)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +78,9 @@ func (s *service) GetAllBooks() ([]dto.Response, error) {
 	for i := range books {
 		responses = append(responses, *toResponse(&books[i]))
 	}
-	return responses, nil
+
+	result := httpresponse.NewPaginated(responses, p.Page, p.Limit, total)
+	return &result, nil
 }
 
 func (s *service) UpdateBook(id uint, req dto.UpdateRequest) (*dto.Response, error) {

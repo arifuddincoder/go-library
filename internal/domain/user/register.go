@@ -32,4 +32,8 @@ func RegisterRoutes(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
 		middlewares.AuthMiddleware(jwtService),
 		middlewares.RequireRole(string(constants.RoleAdmin), string(constants.RoleSuperAdmin)),
 	)
+	api.GET("/users", userHandler.GetAllUsers,
+		middlewares.AuthMiddleware(jwtService),
+		middlewares.RequireRole(string(constants.RoleAdmin), string(constants.RoleSuperAdmin)),
+	)
 }

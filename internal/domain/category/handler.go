@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go-library/internal/domain/category/dto"
 	"go-library/internal/httpresponse"
+	"go-library/internal/query"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -59,7 +60,9 @@ func (h *handler) CreateCategory(c *echo.Context) error {
 }
 
 func (h *handler) GetAllCategories(c *echo.Context) error {
-	responses, err := h.service.GetAllCategories()
+	p := query.Parse(c)
+
+	result, err := h.service.GetAllCategories(p)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
 			Code:    http.StatusInternalServerError,
@@ -68,7 +71,7 @@ func (h *handler) GetAllCategories(c *echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, responses)
+	return c.JSON(http.StatusOK, result)
 }
 
 func (h *handler) DeleteCategory(c *echo.Context) error {

@@ -2,6 +2,7 @@ package book
 
 import (
 	"errors"
+	"go-library/internal/query"
 
 	"gorm.io/gorm"
 )
@@ -9,7 +10,7 @@ import (
 type Repository interface {
 	CreateBook(book *Book) error
 	GetBookByID(id uint) (*Book, error)
-	GetAllBooks() ([]Book, error)
+	GetAllBooks(p query.Params) ([]Book, int64, error)
 	UpdateBook(book *Book) error
 	DeleteBook(id uint) error
 }
@@ -45,13 +46,33 @@ func (r *repository) GetBookByID(id uint) (*Book, error) {
 	return &book, nil
 }
 
-func (r *repository) GetAllBooks() ([]Book, error) {
+func (r *repository) GetAllBooks(p query.Params) ([]Book, int64, error) {
 	var books []Book
-	result := r.db.Preload("Category").Find(&books)
+	var total int64
+
+	// search column gulo specify koro
+	searchScope := query.Search(p.Search, "title", "author", "isbn")
+	allowedSort := map[string]bool{"title": true, "author": true, "created_at": true}
+
+	// total count (pagination chara, but search soho)
+	r.db.Model(&Book{}).
+		Scopes(searchScope).
+		Count(&total)
+
+	// actual data (sob scope chain kore)
+	result := r.db.
+		Preload("Category").
+		Scopes(
+			searchScope,
+			query.Sort(p, allowedSort),
+			query.Paginate(p),
+		).
+		Find(&books)
+
 	if result.Error != nil {
-		return nil, result.Error
+		return nil, 0, result.Error
 	}
-	return books, nil
+	return books, total, nil
 }
 
 func (r *repository) UpdateBook(book *Book) error {

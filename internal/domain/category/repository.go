@@ -2,6 +2,7 @@ package category
 
 import (
 	"errors"
+	"go-library/internal/query"
 
 	"gorm.io/gorm"
 )
@@ -10,7 +11,7 @@ type Repository interface {
 	CreateCategory(category *Category) error
 	GetCategoryByName(name string) (*Category, error)
 	GetCategoryByID(id uint) (*Category, error)
-	GetAllCategories() ([]Category, error)
+	GetAllCategories(p query.Params) ([]Category, int64, error)
 	DeleteCategory(id uint) error
 }
 
@@ -57,13 +58,29 @@ func (r *repository) GetCategoryByID(id uint) (*Category, error) {
 	return &category, nil
 }
 
-func (r *repository) GetAllCategories() ([]Category, error) {
+func (r *repository) GetAllCategories(p query.Params) ([]Category, int64, error) {
 	var categories []Category
-	result := r.db.Find(&categories)
+	var total int64
+
+	searchScope := query.Search(p.Search, "name", "description")
+	allowedSort := map[string]bool{"name": true, "created_at": true}
+
+	r.db.Model(&Category{}).
+		Scopes(searchScope).
+		Count(&total)
+
+	result := r.db.
+		Scopes(
+			searchScope,
+			query.Sort(p, allowedSort),
+			query.Paginate(p),
+		).
+		Find(&categories)
+
 	if result.Error != nil {
-		return nil, result.Error
+		return nil, 0, result.Error
 	}
-	return categories, nil
+	return categories, total, nil
 }
 
 func (r *repository) DeleteCategory(id uint) error {

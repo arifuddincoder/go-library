@@ -2,6 +2,8 @@ package category
 
 import (
 	"go-library/internal/domain/category/dto"
+	"go-library/internal/httpresponse"
+	"go-library/internal/query"
 )
 
 type service struct {
@@ -40,8 +42,8 @@ func (s *service) CreateCategory(req dto.CreateRequest) (*dto.Response, error) {
 	return &response, nil
 }
 
-func (s *service) GetAllCategories() ([]dto.Response, error) {
-	categories, err := s.repo.GetAllCategories()
+func (s *service) GetAllCategories(p query.Params) (*httpresponse.Paginated, error) {
+	categories, total, err := s.repo.GetAllCategories(p)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,9 @@ func (s *service) GetAllCategories() ([]dto.Response, error) {
 			CreatedAt:   category.CreatedAt.String(),
 		})
 	}
-	return responses, nil
+
+	result := httpresponse.NewPaginated(responses, p.Page, p.Limit, total)
+	return &result, nil
 }
 
 func (s *service) DeleteCategory(id uint) error {

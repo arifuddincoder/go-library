@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go-library/internal/domain/user/dto"
 	"go-library/internal/httpresponse"
+	"go-library/internal/query"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -192,4 +193,19 @@ func (h *handler) DeleteUser(c *echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{
 		"message": "User deleted successfully",
 	})
+}
+
+func (h *handler) GetAllUsers(c *echo.Context) error {
+	p := query.Parse(c)
+
+	result, err := h.service.GetAllUsers(p)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to fetch users",
+			Details: err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
