@@ -10,6 +10,7 @@ import (
 type Repository interface {
 	RegisterUser(user *User) error
 	GetUserByEmail(email string) (*User, error)
+	GetUserByID(id uint) (*User, error)
 	GetAllUsers(p query.Params) ([]User, int64, error)
 	DeleteUser(id uint) error
 }
@@ -85,4 +86,16 @@ func (r *repository) GetAllUsers(p query.Params) ([]User, int64, error) {
 		return nil, 0, result.Error
 	}
 	return users, total, nil
+}
+
+func (r *repository) GetUserByID(id uint) (*User, error) {
+	var user User
+	result := r.db.First(&user, id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+	return &user, nil
 }

@@ -23,6 +23,7 @@ func RegisterRoutes(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
 	api := e.Group("/api/v1/auth")
 	api.POST("/register", userHandler.RegisterUser)
 	api.POST("/login", userHandler.LoginUser)
+	api.POST("/refresh", userHandler.Refresh)
 	api.GET("/me", userHandler.GetMe, middlewares.AuthMiddleware(jwtService))
 	api.POST("/admin", userHandler.CreateAdmin,
 		middlewares.AuthMiddleware(jwtService),
